@@ -8,6 +8,8 @@ from src.api.exceptions import InvalidUsage
 from autotech_sdk.database.mongo import MongoDBInit
 
 from src.api.hello_world_ping import views as hello_world_views
+from src.api.auth import views as auth_views
+from src.api.admin import views as admin_views
 from flask_apispec import FlaskApiSpec
 
 
@@ -38,14 +40,20 @@ def register_extensions(app):
 
 def register_blueprint_for_docs(docs: FlaskApiSpec):
     hello_world_views.register_docs(docs)
+    auth_views.register_docs(docs)
+    admin_views.register_docs(docs)
 
 
 def register_blueprints(app: Flask):
     origins = app.config.get('CORS_ORIGIN_WHITELIST', '*')
 
     cors.init_app(hello_world_views.blueprint, origins=origins)
+    cors.init_app(auth_views.blueprint, origins=origins)
+    cors.init_app(admin_views.blueprint, origins=origins)
 
     app.register_blueprint(hello_world_views.blueprint)
+    app.register_blueprint(auth_views.blueprint)
+    app.register_blueprint(admin_views.blueprint)
 
 
 def register_error_handlers(app: Flask):

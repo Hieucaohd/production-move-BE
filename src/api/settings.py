@@ -2,6 +2,7 @@
 import os
 from apispec import APISpec
 from apispec.ext.marshmallow import MarshmallowPlugin
+from autotech_sdk.database.mongo.mongo_config import MongoConfig
 
 
 class Config(object):
@@ -19,10 +20,10 @@ class ProdConfig(Config):
 
     ENV = 'prod'
     DEBUG = False
-    MONGO_DB_SETTINGS = {
-        "MONGO_URI": os.environ.get("MONGO_URL", "mongodb://localhost:27017"),
-        "DB_NAME": os.environ.get("DB_NAME", "prodDB")
-    }
+    MONGO_DB_SETTINGS = MongoConfig(
+        mongo_uri=os.environ.get("MONGO_URL", "mongodb://localhost:27017"),
+        db_name=os.environ.get("DB_NAME", "prodDB")
+    )
 
 
 class DevConfig(Config):
@@ -32,10 +33,10 @@ class DevConfig(Config):
     DEBUG = True
     DB_NAME = 'devDB'
     DB_PATH = None
-    MONGO_DB_SETTINGS = {
-        "MONGO_URI": os.environ.get("MONGO_URL", "mongodb://localhost:27017"),
-        "DB_NAME": os.environ.get("DB_NAME", "devDB")
-    }
+    MONGO_DB_SETTINGS = MongoConfig(
+        mongo_uri=os.environ.get("MONGO_URL", "mongodb://localhost:27017"),
+        db_name=os.environ.get("DB_NAME", "devDB")
+    )
 
     APISPEC_SPEC = APISpec(
         title='url-builder-docs',
@@ -54,7 +55,7 @@ class TestConfig(Config):
 
     TESTING = True
     DEBUG = True
-    MONGO_DB_SETTINGS = {
-        "MONGO_URI": os.environ.get("MONGO_URL", "mongodb://localhost:27017"),
-        "DB_NAME": os.environ.get("DB_NAME", "testDB")
-    }
+    MONGO_DB_SETTINGS = MongoConfig(
+        mongo_uri=os.environ.get("MONGO_URL", "mongodb://localhost:27017"),
+        db_name=os.environ.get("DB_NAME", "testDB")
+    )

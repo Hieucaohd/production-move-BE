@@ -33,3 +33,5 @@ WTForms==3.0.1
 locust==2.10.2
 autotech-sdk==1.0.2
 python-dotenv==0.21.0
+
+dacite~=1.6.0

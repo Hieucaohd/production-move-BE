@@ -10,5 +10,11 @@ class Endpoint:
     SOLD_PRODUCTION = "/api/distribution-agents/sold-production"
     GUARANTEE_PRODUCTION = "/api/distribution-agents/guarantee"
     GUARANTEE_DONE = "/api/warranty-center/guarantee-done"
+    ALL_PRODUCT_LINES = "/api/product-lines"
+    ALL_MANUFACTURE_FACTORIES = "/api/manufacture-factories"
+    ALL_DISTRIBUTION_AGENTS = "/api/distribution-agents"
+    ALL_WARRANTY_CENTERS = "/api/warranty-centers"
+    ALL_PRODUCTIONS = "/api/productions"
+    ALL_PRODUCTION_LOTS = "/api/production-lots"
 
 

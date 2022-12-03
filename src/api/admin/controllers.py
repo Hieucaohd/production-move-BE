@@ -110,7 +110,7 @@ class AdminController:
 
     @classmethod
     def create_production_lot(cls):
-        create_production_lot_form: CreateProductionLotForm = request.json
+        create_production_lot_form = from_dict(CreateProductionLotForm,request.json)
         manufacture_factory: UserAuthData = loads(
             request.cookies.get(USER_AUTH_DATA_KEY))
 
@@ -119,7 +119,7 @@ class AdminController:
 
         productions: typing.List[Production] = []
         product_lot_id = generate_uuid()
-        for _ in range(create_production_lot_form['production_number']):
+        for _ in range(create_production_lot_form.production_number):
             production: Production = {
                 "production_id": generate_uuid(),
                 "product_lot_id": product_lot_id,
@@ -133,7 +133,7 @@ class AdminController:
             return jsonify({"error": str(er)})
 
         data_to_create_production_lot: ProductionLot = {
-            **create_production_lot_form,
+            **create_production_lot_form.__dict__,
             "product_lot_id": product_lot_id,
             "manufacture_factory_id": manufacture_factory["id"]
         }
@@ -150,10 +150,10 @@ class AdminController:
 
     @classmethod
     def export_production_lot(cls):
-        export_production_lot_form: ExportProductionLotForm = request.json
-        product_lot_id = export_production_lot_form['product_lot_id']
-        distribution_agent_id = export_production_lot_form['distribution_agent_id']
-        export_time = export_production_lot_form['export_time']
+        export_production_lot_form = from_dict(ExportProductionLotForm, request.json)
+        product_lot_id = export_production_lot_form.product_lot_id
+        distribution_agent_id = export_production_lot_form.distribution_agent_id
+        export_time = export_production_lot_form.export_time
 
         try:
             ProductionModel.change_many_productions_status(
@@ -234,3 +234,39 @@ class AdminController:
             return jsonify({"success": True})
         except Exception as er:
             return jsonify({"error": str(er)})
+
+    @classmethod
+    def get_product_lines(cls):
+        return jsonify({
+            "product_lines": ProductLineModel.get_product_lines()
+        })
+
+    @classmethod
+    def get_manufacture_factories(cls):
+        return jsonify({
+            "manufacture_factories": ManufactureFactoryModel.get_manufacture_factories()
+        })
+
+    @classmethod
+    def get_distribution_agents(cls):
+        return jsonify({
+            "distribution_agents": DistributionAgentModel.get_distribution_agents()
+        })
+
+    @classmethod
+    def get_warranty_centers(cls):
+        return jsonify({
+            "warranty_centers": WarrantyCenterModel.get_warranty_centers()
+        })
+
+    @classmethod
+    def get_all_productions(cls, page, per_page):
+        return jsonify({
+            "productions": ProductionModel.get_all_productions(page, per_page)
+        })
+
+    @classmethod
+    def get_all_production_lots(cls):
+        return jsonify({
+            "production_lots": ProductionLotModel.get_production_lots()
+        })

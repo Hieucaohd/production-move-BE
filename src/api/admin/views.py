@@ -1,4 +1,4 @@
-from flask import Blueprint
+from flask import Blueprint, request
 
 from src.api import HttpMethod
 from src.common.utils.docs_register import register_view
@@ -51,6 +51,38 @@ def guarantee_production():
 @blueprint.route(Endpoint.GUARANTEE_DONE, methods=[HttpMethod.POST])
 def guarantee_done():
     return AdminController.guarantee_done()
+
+
+@blueprint.route(Endpoint.ALL_PRODUCT_LINES, methods=[HttpMethod.GET])
+def get_all_product_lines():
+    return AdminController.get_product_lines()
+
+
+@blueprint.route(Endpoint.ALL_MANUFACTURE_FACTORIES, methods=[HttpMethod.GET])
+def get_all_manufacture_factories():
+    return AdminController.get_manufacture_factories()
+
+
+@blueprint.route(Endpoint.ALL_DISTRIBUTION_AGENTS, methods=[HttpMethod.GET])
+def get_all_distribution_agents():
+    return AdminController.get_distribution_agents()
+
+
+@blueprint.route(Endpoint.ALL_WARRANTY_CENTERS, methods=[HttpMethod.GET])
+def get_all_warranty_centers():
+    return AdminController.get_warranty_centers()
+
+
+@blueprint.route(Endpoint.ALL_PRODUCTIONS, methods=[HttpMethod.GET])
+def get_all_productions():
+    page = request.args.get("page", 1)
+    per_page = request.args.get("per_page", 10)
+    return AdminController.get_all_productions(page, per_page)
+
+
+@blueprint.route(Endpoint.ALL_PRODUCTION_LOTS, methods=[HttpMethod.GET])
+def get_all_production_lots():
+    return AdminController.get_all_production_lots()
 
 
 def register_docs(docs):

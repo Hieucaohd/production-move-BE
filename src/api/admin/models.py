@@ -1,6 +1,6 @@
 from autotech_sdk.database.mongo.base_model import BaseMongoDB
 from pymongo import IndexModel, ASCENDING
-from typing import TypedDict, Optional
+from typing import TypedDict
 import typing
 from datetime import datetime
 
@@ -34,6 +34,15 @@ class ProductLineModel(BaseMongoDB):
         inserted_id = cls.conn_primary.insert_one(product_line).inserted_id
         return bool(inserted_id)
 
+    @classmethod
+    def get_product_lines(cls) -> typing.List[ProductLine]:
+        product_lines = cls.conn_secondary.find()
+        for product_line in product_lines:
+            product_line["production_number"] = 5000
+            product_line["productions_sold"] = 200
+            product_line["guarantee_number"] = 300
+        return list(product_lines)
+
 
 class ProductionLot(TypedDict):
     product_lot_id: str
@@ -60,6 +69,34 @@ class ProductionLotModel(BaseMongoDB):
     def export_production_lot(cls, product_lot_id: str, distribution_agent_id: str, export_time: str):
         cls.conn_primary.update_one({"product_lot_id":  product_lot_id}, {
                                     "distribution_agent_id": distribution_agent_id, "export_time": export_time})
+
+    @classmethod
+    def get_production_lots(cls):
+        production_lots = cls.conn_secondary.aggregate(
+            [
+                {
+                    "$lookup": {
+                        "from": ProductLineModel.COLLECTION_NAME,
+                        "localField": "product_lot_id",
+                        "foreignField": "product_lot_id",
+                        "as": "product_lines"
+                    }
+                },
+                {
+                    "$project": {
+                        "product_line": {"$first": "$product_lines"},
+                        "product_lot_id": 1,
+                        "production_number": 1,
+                        "_id": 0,
+                        "production_time": 1,
+                    }
+                }
+            ]
+        )
+        for production_lot in production_lots:
+            production_lot["distribution_agent_name"] = "Xuân thủy"
+            production_lot["status"] = "NEW_PRODUCTION"
+        return list(production_lots)
 
 
 class ProductionStatus:
@@ -102,6 +139,20 @@ class ProductionModel(BaseMongoDB):
     @classmethod
     def find_productions_by_product_lot_id(cls, product_lot_id: str) -> typing.List[Production]:
         productions = cls.conn_secondary.find({"product_lot_id": product_lot_id})
+        return list(productions)
+
+    @classmethod
+    def get_all_productions(cls, page: int, per_page: int) -> typing.List[Production]:
+        productions = cls.conn_secondary.find().skip(per_page*(page -1)).limit(per_page)
+        for production in productions:
+            production["product_line_name"] = "Iphone 14 pro max",
+            production["manufacture_factory_name"] = "Long Hải"
+            production["production_time"] = "10/10/2022",
+            production["sold_at"] = "10/10/2022",
+            production["distribution_agent_name"] = "Xuân Thủy",
+            production["warranty_center_name"] = "Hoàng Hà",
+            production["guarantee_number"] = 2,
+            production["customer_name"] = "Cao Trung Hiếu"
         return list(productions)
 
 
@@ -185,4 +236,3 @@ class GuaranteeHistoryModel(BaseMongoDB):
         cls.conn_primary.update_one({"production_id": production_id}, {
             "done_guarantee_at": day_sent
         })
-

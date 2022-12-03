@@ -36,12 +36,13 @@ class ProductLineModel(BaseMongoDB):
 
     @classmethod
     def get_product_lines(cls) -> typing.List[ProductLine]:
-        product_lines = cls.conn_secondary.find()
+        product_lines = cls.conn_secondary.find(projection={"_id": False})
+        product_lines = list(product_lines)
         for product_line in product_lines:
             product_line["production_number"] = 5000
             product_line["productions_sold"] = 200
             product_line["guarantee_number"] = 300
-        return list(product_lines)
+        return product_lines
 
 
 class ProductionLot(TypedDict):
@@ -93,10 +94,11 @@ class ProductionLotModel(BaseMongoDB):
                 }
             ]
         )
+        production_lots = list(production_lots)
         for production_lot in production_lots:
             production_lot["distribution_agent_name"] = "Xuân thủy"
             production_lot["status"] = "NEW_PRODUCTION"
-        return list(production_lots)
+        return production_lots
 
 
 class ProductionStatus:
@@ -138,12 +140,13 @@ class ProductionModel(BaseMongoDB):
 
     @classmethod
     def find_productions_by_product_lot_id(cls, product_lot_id: str) -> typing.List[Production]:
-        productions = cls.conn_secondary.find({"product_lot_id": product_lot_id})
+        productions = cls.conn_secondary.find({"product_lot_id": product_lot_id}, projection={"_id": False})
         return list(productions)
 
     @classmethod
     def get_all_productions(cls, page: int, per_page: int) -> typing.List[Production]:
-        productions = cls.conn_secondary.find().skip(per_page*(page -1)).limit(per_page)
+        productions = cls.conn_secondary.find(projection={"_id": False}).skip(per_page*(page - 1)).limit(per_page)
+        productions = list(productions)
         for production in productions:
             production["product_line_name"] = "Iphone 14 pro max",
             production["manufacture_factory_name"] = "Long Hải"
@@ -153,7 +156,7 @@ class ProductionModel(BaseMongoDB):
             production["warranty_center_name"] = "Hoàng Hà",
             production["guarantee_number"] = 2,
             production["customer_name"] = "Cao Trung Hiếu"
-        return list(productions)
+        return productions
 
 
 class DistributionAgentWarehouseItem(TypedDict):

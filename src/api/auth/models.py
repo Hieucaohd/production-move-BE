@@ -66,14 +66,15 @@ class ManufactureFactoryModel(BaseMongoDB):
 
     @classmethod
     def get_manufacture_factories(cls) -> typing.List[ManufactureFactory]:
-        manufacture_factories = cls.conn_secondary.find()
+        manufacture_factories = cls.conn_secondary.find(projection={"_id": False})
+        manufacture_factories = list(manufacture_factories)
         for manufacture_factory in manufacture_factories:
             manufacture_factory["production_number"] = 1000000
             manufacture_factory["productions_distributed"] = 100
             manufacture_factory["guarantee_number"] = 50
             manufacture_factory["error_number"] = 20
             manufacture_factory["production_return_back_number"] = 2
-        return list(manufacture_factories)
+        return manufacture_factories
 
 
 class DistributionAgent(TypedDict):
@@ -108,12 +109,13 @@ class DistributionAgentModel(BaseMongoDB):
 
     @classmethod
     def get_distribution_agents(cls) -> typing.List[DistributionAgent]:
-        distribution_agents = cls.conn_secondary.find()
+        distribution_agents = cls.conn_secondary.find(projection={"_id": False})
+        distribution_agents = list(distribution_agents)
         for distribution_agent in distribution_agents:
             distribution_agent["received_productions_number"] = 1000
             distribution_agent["productions_sold"] = 100
             distribution_agent["return_back"] = 5
-        return list(distribution_agents)
+        return distribution_agents
 
 
 class WarrantyCenter(TypedDict):
@@ -148,9 +150,10 @@ class WarrantyCenterModel(BaseMongoDB):
 
     @classmethod
     def get_warranty_centers(cls) -> typing.List[WarrantyCenter]:
-        warranty_centers = cls.conn_secondary.find()
+        warranty_centers = cls.conn_secondary.find(projection={"_id": False})
+        warranty_centers = list(warranty_centers)
         for warranty_center in warranty_centers:
             warranty_center["guaranteeing_number"] = 1000
             warranty_center["guarantee_done_number"] = 100
             warranty_center["can_not_guarantee"] = 10
-        return list(warranty_centers)
+        return warranty_centers

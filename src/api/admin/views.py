@@ -53,6 +53,11 @@ def guarantee_done():
     return AdminController.guarantee_done()
 
 
+@blueprint.route(Endpoint.WARRANTY_SEND_BACK_FACTORY, methods=[HttpMethod.POST])
+def warranty_send_back_factory():
+    return AdminController.warranty_send_back_factory()
+
+
 @blueprint.route(Endpoint.ALL_PRODUCT_LINES, methods=[HttpMethod.GET])
 def get_all_product_lines():
     return AdminController.get_product_lines()
@@ -75,14 +80,21 @@ def get_all_warranty_centers():
 
 @blueprint.route(Endpoint.ALL_PRODUCTIONS, methods=[HttpMethod.GET])
 def get_all_productions():
-    page = request.args.get("page", 1)
-    per_page = request.args.get("per_page", 10)
+    page = int(request.args.get("page", 1))
+    per_page = int(request.args.get("per_page", 10))
     return AdminController.get_all_productions(page, per_page)
 
 
 @blueprint.route(Endpoint.ALL_PRODUCTION_LOTS, methods=[HttpMethod.GET])
 def get_all_production_lots():
     return AdminController.get_all_production_lots()
+
+
+@blueprint.route(Endpoint.PRODUCTIONS_ERROR, methods=[HttpMethod.GET])
+def get_all_productions_error():
+    page = int(request.args.get("page", 1))
+    per_page = int(request.args.get("per_page", 10))
+    return AdminController.get_error_productions(page, per_page)
 
 
 def register_docs(docs):

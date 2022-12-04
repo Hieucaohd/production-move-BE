@@ -13,7 +13,7 @@ from src.api.admin.forms import \
     CreateWarrantyCenterForm, \
     CreateProductLineForm, \
     CreateProductionLotForm, \
-    ExportProductionLotForm, SoldProductionForm, GuaranteeProductionForm, GuaranteeDoneForm
+    ExportProductionLotForm, SoldProductionForm, GuaranteeProductionForm, GuaranteeDoneForm, WarrantySendBackFactoryForm
 from src.api.admin.models import \
     ProductLine, \
     ProductLineModel, \
@@ -110,11 +110,11 @@ class AdminController:
 
     @classmethod
     def create_production_lot(cls):
-        create_production_lot_form = from_dict(CreateProductionLotForm,request.json)
+        create_production_lot_form = from_dict(CreateProductionLotForm, request.json)
         manufacture_factory: UserAuthData = loads(
             request.cookies.get(USER_AUTH_DATA_KEY))
 
-        if not manufacture_factory["user_type"] != UserType.MANUFACTURE_FACTORY:
+        if manufacture_factory["user_type"] != UserType.MANUFACTURE_FACTORY:
             return jsonify({"error": "User isn't manufacture factory"})
 
         productions: typing.List[Production] = []
@@ -236,6 +236,25 @@ class AdminController:
             return jsonify({"error": str(er)})
 
     @classmethod
+    def warranty_send_back_factory(cls):
+        warranty_send_back_factory_form = from_dict(WarrantySendBackFactoryForm, request.json)
+
+        try:
+            ProductionModel.change_production_status(
+                production_id=warranty_send_back_factory_form.production_id,
+                status=ProductionStatus.ERROR_NEED_BACK_TO_MANUFACTURE_FACTORY
+            )
+
+            GuaranteeHistoryModel.send_error_production_back_factory(
+                production_id=warranty_send_back_factory_form.production_id,
+                go_back_factory_at=warranty_send_back_factory_form.day_sent
+            )
+
+            return jsonify({"success": True})
+        except Exception as er:
+            return jsonify({"error": str(er)})
+
+    @classmethod
     def get_product_lines(cls):
         return jsonify({
             "product_lines": ProductLineModel.get_product_lines()
@@ -267,6 +286,25 @@ class AdminController:
 
     @classmethod
     def get_all_production_lots(cls):
+        manufacture_factory: UserAuthData = loads(
+            request.cookies.get(USER_AUTH_DATA_KEY))
+
+        if manufacture_factory["user_type"] != UserType.MANUFACTURE_FACTORY:
+            return jsonify({"error": "User isn't manufacture factory"})
+
         return jsonify({
-            "production_lots": ProductionLotModel.get_production_lots()
+            "production_lots": ProductionLotModel.get_production_lots(manufacture_factory["id"])
         })
+
+    @classmethod
+    def get_error_productions(cls, page, per_page):
+        manufacture_factory: UserAuthData = loads(
+            request.cookies.get(USER_AUTH_DATA_KEY))
+
+        if manufacture_factory["user_type"] != UserType.MANUFACTURE_FACTORY:
+            return jsonify({"error": "User isn't manufacture factory"})
+
+        return jsonify({
+            "productions": ProductionModel.get_error_productions(manufacture_factory["id"], page, per_page)
+        })
+

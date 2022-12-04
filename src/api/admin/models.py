@@ -4,6 +4,8 @@ from typing import TypedDict
 import typing
 from datetime import datetime
 
+from src.api.admin.aggregate import ProductionAggregateFactory, ProductionLotAggregateFactory
+
 
 class ProductLineConfiguration(TypedDict):
     ram: str
@@ -68,36 +70,33 @@ class ProductionLotModel(BaseMongoDB):
 
     @classmethod
     def export_production_lot(cls, product_lot_id: str, distribution_agent_id: str, export_time: str):
-        cls.conn_primary.update_one({"product_lot_id":  product_lot_id}, {
-                                    "distribution_agent_id": distribution_agent_id, "export_time": export_time})
+        cls.conn_primary.update_one({"product_lot_id":  product_lot_id}, {"$set": {
+                                    "distribution_agent_id": distribution_agent_id, "export_time": export_time}})
 
     @classmethod
-    def get_production_lots(cls):
+    def get_production_lots(cls, manufacture_factory_id: str):
         production_lots = cls.conn_secondary.aggregate(
             [
                 {
-                    "$lookup": {
-                        "from": ProductLineModel.COLLECTION_NAME,
-                        "localField": "product_lot_id",
-                        "foreignField": "product_lot_id",
-                        "as": "product_lines"
+                    "$match": {
+                        "manufacture_factory_id": manufacture_factory_id
                     }
                 },
+                *ProductionLotAggregateFactory.construct_production_lot(),
+                *ProductionLotAggregateFactory.join_product_line(),
+                *ProductionLotAggregateFactory.join_distribution_agent(),
                 {
                     "$project": {
-                        "product_line": {"$first": "$product_lines"},
-                        "product_lot_id": 1,
-                        "production_number": 1,
-                        "_id": 0,
-                        "production_time": 1,
+                        "product_lot_id": "$production_lot.product_lot_id",
+                        "production_number": "$production_lot.production_number",
+                        "production_time": "$production_lot.production_time",
+                        "distribution_agent_name": "$distribution_agent.name",
+                        "product_line": "$product_line",
                     }
                 }
             ]
         )
         production_lots = list(production_lots)
-        for production_lot in production_lots:
-            production_lot["distribution_agent_name"] = "Xuân thủy"
-            production_lot["status"] = "NEW_PRODUCTION"
         return production_lots
 
 
@@ -131,12 +130,12 @@ class ProductionModel(BaseMongoDB):
 
     @classmethod
     def change_many_productions_status(cls, query: dict, status: str):
-        cls.conn_primary.update_many(query, {"status": status})
+        cls.conn_primary.update_many(query, {"$set": {"status": status}})
 
     @classmethod
     def change_production_status(cls, production_id: str, status: str):
         cls.conn_primary.update_one(
-            {"production_id": production_id}, {"status": status})
+            {"production_id": production_id}, {"$set": {"status": status}})
 
     @classmethod
     def find_productions_by_product_lot_id(cls, product_lot_id: str) -> typing.List[Production]:
@@ -145,17 +144,79 @@ class ProductionModel(BaseMongoDB):
 
     @classmethod
     def get_all_productions(cls, page: int, per_page: int) -> typing.List[Production]:
-        productions = cls.conn_secondary.find(projection={"_id": False}).skip(per_page*(page - 1)).limit(per_page)
+        productions = cls.conn_secondary.aggregate(
+            [
+                {
+                    "$limit": per_page*page
+                },
+                {
+                    "$skip": per_page*(page - 1)
+                },
+                *ProductionAggregateFactory.query_all_production_infor(),
+                {
+                    "$project": {
+                        "production_id": "$production.production_id",
+                        "status": "$production.status",
+                        "product_line_name": "$product_line.name",
+                        "product_lot_id": "$production_lot.product_lot_id",
+                        "manufacture_factory_name": "$manufacture_factory.name",
+                        "production_time": "$production_lot.production_time",
+                        "sold_at": "$distribution_agent_warehouse.sold_at",
+                        "distribution_agent_name": "$distribution_agent.name",
+                        "warranty_center_name": "$warranty_center.name",
+                        "guarantee_number": 2,  #TODO: đếm số lần bảo hành
+                        "customer_name": "$customer.fullname"
+                    }
+                }
+            ]
+        )
         productions = list(productions)
-        for production in productions:
-            production["product_line_name"] = "Iphone 14 pro max",
-            production["manufacture_factory_name"] = "Long Hải"
-            production["production_time"] = "10/10/2022",
-            production["sold_at"] = "10/10/2022",
-            production["distribution_agent_name"] = "Xuân Thủy",
-            production["warranty_center_name"] = "Hoàng Hà",
-            production["guarantee_number"] = 2,
-            production["customer_name"] = "Cao Trung Hiếu"
+        return productions
+
+    @classmethod
+    def get_error_productions(cls, manufacture_factory_id: str, page: int, per_page: int):
+        productions = cls.conn_secondary.aggregate(
+            [
+                {
+                    "$match": {
+                        "status": ProductionStatus.ERROR_NEED_BACK_TO_MANUFACTURE_FACTORY
+                    }
+                },
+                *ProductionAggregateFactory.construct_production(),
+                *ProductionAggregateFactory.join_production_lot(),
+                {
+                    "$match": {
+                        "production_lot.manufacture_factory_id": manufacture_factory_id
+                    }
+                },
+                {
+                    "$limit": page * per_page
+                },
+                {
+                    "$skip": per_page * (page - 1)
+                },
+                *ProductionAggregateFactory.join_product_line(),
+                *ProductionAggregateFactory.join_distribution_agent_warehouse(),
+                *ProductionAggregateFactory.join_customer(),
+                *ProductionAggregateFactory.join_distribution_agent(),
+                *ProductionAggregateFactory.join_guarantee_history(),
+                *ProductionAggregateFactory.join_warranty_center(),
+                {
+                    "$project": {
+                        "production_id": "$production.production_id",
+                        "product_line_name": "$product_line.name",
+                        "product_lot_id": "$production_lot.product_lot_id",
+                        "production_time": "$production_lot.production_time",
+                        "sold_at": "$distribution_agent_warehouse.sold_at",
+                        "distribution_agent_name": "$distribution_agent.name",
+                        "warranty_center_name": "$warranty_center.name",
+                        "guarantee_number": 2,      #TODO: đếm
+                        "customer_name": "$customer.fullname"
+                    }
+                }
+            ]
+        )
+        productions = list(productions)
         return productions
 
 
@@ -163,7 +224,7 @@ class DistributionAgentWarehouseItem(TypedDict):
     production_id: str
     distribution_agent_id: str
     sold_at: typing.Optional[str]
-    customer_id: typing.Optional[str]
+    customer_phone_number: typing.Optional[str]
 
 
 class DistributionAgentWarehouseModel(BaseMongoDB):
@@ -186,17 +247,17 @@ class DistributionAgentWarehouseModel(BaseMongoDB):
                 "production_id": production['production_id'],
                 "distribution_agent_id": distribution_agent_id,
                 "sold_at": None,
-                "customer_id": None
+                "customer_phone_number": None
             }
             warehouse_items.append(warehouse_item)
         cls.insert_many_warehouse_items(warehouse_items)
 
     @classmethod
     def sold_production(cls, production_id: str, customer_phone_number: str, sold_at: str):
-        cls.conn_primary.update_one({"production_id": production_id}, {
+        cls.conn_primary.update_one({"production_id": production_id}, {"$set": {
             "customer_phone_number": customer_phone_number,
             "sold_at": sold_at
-        })
+        }})
 
 
 class Customer(TypedDict):
@@ -212,8 +273,8 @@ class CustomerModel(BaseMongoDB):
 
     @classmethod
     def insert_customer_if_not_exist(cls, customer: Customer):
-        customer = cls.conn_secondary.find_one({"phone_number": customer['phone_number']})
-        if not customer:
+        customer_find = cls.conn_secondary.find_one({"phone_number": customer['phone_number']})
+        if not customer_find:
             cls.conn_primary.insert_one(customer)
 
 
@@ -239,3 +300,26 @@ class GuaranteeHistoryModel(BaseMongoDB):
         cls.conn_primary.update_one({"production_id": production_id}, {
             "done_guarantee_at": day_sent
         })
+
+    @classmethod
+    def send_error_production_back_factory(cls, production_id: str, go_back_factory_at: str):
+        cls.conn_primary.update_one({"production_id": production_id},
+                                    {"$set": {"go_back_manufacture_factory_at": go_back_factory_at}})
+
+
+if __name__ == '__main__':
+    from dotenv import load_dotenv
+    load_dotenv()
+    from autotech_sdk.database.mongo import MongoDBInit, MongoConfig
+    import os
+    from pprint import pprint
+
+    mongo_config = MongoConfig(
+        mongo_uri=os.environ.get("MONGO_URL", "mongodb://localhost:27017"),
+        db_name=os.environ.get("DB_NAME", "prodDB")
+    )
+    MongoDBInit.init_client(mongo_config)
+    # productions = ProductionModel.get_all_productions(1, 10)
+    # pprint(productions, indent=2)
+    production_lots = ProductionLotModel.get_production_lots("d3e0947e719111ed94bbf42679426f61")
+    pprint(production_lots, indent=2)

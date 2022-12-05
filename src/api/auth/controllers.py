@@ -50,3 +50,12 @@ class AuthController:
 
         return response
 
+    @classmethod
+    def logout(cls):
+        response = jsonify({
+            "success": True
+        })
+
+        response.delete_cookie(USER_AUTH_DATA_KEY)
+        return response
+

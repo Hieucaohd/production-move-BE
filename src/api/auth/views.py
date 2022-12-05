@@ -13,6 +13,11 @@ def login():
     return AuthController.login()
 
 
+@blueprint.route(Endpoint.LOGOUT, methods=[HttpMethod.POST])
+def logout():
+    return AuthController.logout()
+
+
 def register_docs(docs):
     register_view(docs, blueprint, [
         login

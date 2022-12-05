@@ -1,6 +1,7 @@
 class Endpoint:
     HELLO_WORLD = "/"
     LOGIN = "/api/login"
+    LOGOUT = "/api/logout"
     CREATE_MANUFACTURE_FACTORY = "/api/admins/create-manufacture-factory"
     CREATE_DISTRIBUTION_AGENT = "/api/admins/create-distribution-agent"
     CREATE_WARRANTY_CENTER = "/api/admins/create-warranty-center"

@@ -297,7 +297,7 @@ class AdminController:
         })
 
     @classmethod
-    def get_error_productions(cls, page, per_page):
+    def get_error_productions(cls, page: int, per_page: int):
         manufacture_factory: UserAuthData = loads(
             request.cookies.get(USER_AUTH_DATA_KEY))
 
@@ -307,4 +307,69 @@ class AdminController:
         return jsonify({
             "productions": ProductionModel.get_error_productions(manufacture_factory["id"], page, per_page)
         })
+
+    @classmethod
+    def get_return_back_productions(cls, page: int, per_page: int):
+        manufacture_factory: UserAuthData = loads(
+            request.cookies.get(USER_AUTH_DATA_KEY))
+
+        if manufacture_factory["user_type"] != UserType.MANUFACTURE_FACTORY:
+            return jsonify({"error": "User isn't manufacture factory"})
+
+        return jsonify({
+            "productions": ProductionModel.get_return_back_productions(manufacture_factory["id"], page, per_page)
+        })
+
+    @classmethod
+    def get_on_sale_productions(cls):
+        distribution_agent: UserAuthData = loads(
+            request.cookies.get(USER_AUTH_DATA_KEY)
+        )
+
+        if distribution_agent["user_type"] != UserType.DISTRIBUTION_AGENT:
+            return jsonify({"error": "User isn't distribution agent"})
+
+        return jsonify({
+            "productions": ProductionModel.get_on_sale_productions(distribution_agent["id"])
+        })
+
+    @classmethod
+    def get_sold_productions(cls, page: int, per_page: int):
+        distribution_agent: UserAuthData = loads(
+            request.cookies.get(USER_AUTH_DATA_KEY)
+        )
+
+        if distribution_agent["user_type"] != UserType.DISTRIBUTION_AGENT:
+            return jsonify({"error": "User isn't distribution agent"})
+
+        return jsonify({
+            "productions": ProductionModel.get_sold_productions(distribution_agent["id"], page, per_page)
+        })
+
+    @classmethod
+    def get_guaranteeing_productions(cls, page: int, per_page: int):
+        warranty_center: UserAuthData = loads(
+            request.cookies.get(USER_AUTH_DATA_KEY)
+        )
+
+        if warranty_center["user_type"] != UserType.WARRANTY_CENTER:
+            return jsonify({"error": "User isn't warranty center"})
+
+        return jsonify({
+            "productions": ProductionModel.get_guaranteeing_productions(warranty_center["id"], page, per_page)
+        })
+
+    @classmethod
+    def get_guarantee_done_productions(cls, page: int, per_page: int):
+        warranty_center: UserAuthData = loads(
+            request.cookies.get(USER_AUTH_DATA_KEY)
+        )
+
+        if warranty_center["user_type"] != UserType.WARRANTY_CENTER:
+            return jsonify({"error": "User isn't warranty center"})
+
+        return jsonify({
+            "productions": ProductionModel.get_guarantee_done_productions(warranty_center["id"], page, per_page)
+        })
+
 

@@ -5,7 +5,7 @@ from src.common.utils.docs_register import register_view
 from src.api.urls import Endpoint
 from src.api.admin.controllers import AdminController
 
-blueprint = Blueprint('login', __name__)
+blueprint = Blueprint('admin', __name__)
 
 
 @blueprint.route(Endpoint.CREATE_MANUFACTURE_FACTORY, methods=[HttpMethod.POST])
@@ -90,11 +90,44 @@ def get_all_production_lots():
     return AdminController.get_all_production_lots()
 
 
-@blueprint.route(Endpoint.PRODUCTIONS_ERROR, methods=[HttpMethod.GET])
-def get_all_productions_error():
+@blueprint.route(Endpoint.GET_PRODUCTIONS_ERROR, methods=[HttpMethod.GET])
+def get_productions_error():
     page = int(request.args.get("page", 1))
     per_page = int(request.args.get("per_page", 10))
     return AdminController.get_error_productions(page, per_page)
+
+
+@blueprint.route(Endpoint.GET_PRODUCTIONS_RETURN_BACK, methods=[HttpMethod.GET])
+def get_productions_return_back():
+    page = int(request.args.get("page", 1))
+    per_page = int(request.args.get("per_page", 10))
+    return AdminController.get_return_back_productions(page, per_page)
+
+
+@blueprint.route(Endpoint.GET_ON_SALE_PRODUCTIONS, methods=[HttpMethod.GET])
+def get_on_sale_productions():
+    return AdminController.get_on_sale_productions()
+
+
+@blueprint.route(Endpoint.GET_SOLD_PRODUCTIONS, methods=[HttpMethod.GET])
+def get_sold_productions():
+    page = int(request.args.get("page", 1))
+    per_page = int(request.args.get("per_page", 10))
+    return AdminController.get_sold_productions(page, per_page)
+
+
+@blueprint.route(Endpoint.GET_GUARANTEEING_PRODUCTIONS, methods=[HttpMethod.GET])
+def get_guaranteeing_productions():
+    page = int(request.args.get("page", 1))
+    per_page = int(request.args.get("per_page", 10))
+    return AdminController.get_guaranteeing_productions(page, per_page)
+
+
+@blueprint.route(Endpoint.GET_GUARANTEE_DONE_PRODUCTIONS, methods=[HttpMethod.GET])
+def get_guarantee_done_productions():
+    page = int(request.args.get("page", 1))
+    per_page = int(request.args.get("per_page", 10))
+    return AdminController.get_guarantee_done_productions(page, per_page)
 
 
 def register_docs(docs):

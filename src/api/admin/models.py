@@ -120,7 +120,8 @@ class Production(TypedDict):
 class ProductionModel(BaseMongoDB):
     indexes: typing.Sequence[IndexModel] = [
         IndexModel(keys=[("production_id", ASCENDING)],
-                   unique=True, background=True)
+                   unique=True, background=True),
+        IndexModel(keys=[("status", ASCENDING)], background=True)
     ]
 
     @classmethod
@@ -143,7 +144,7 @@ class ProductionModel(BaseMongoDB):
         return list(productions)
 
     @classmethod
-    def get_all_productions(cls, page: int, per_page: int) -> typing.List[Production]:
+    def get_all_productions(cls, page: int, per_page: int) -> typing.List:
         productions = cls.conn_secondary.aggregate(
             [
                 {
@@ -174,7 +175,7 @@ class ProductionModel(BaseMongoDB):
         return productions
 
     @classmethod
-    def get_error_productions(cls, manufacture_factory_id: str, page: int, per_page: int):
+    def get_error_productions(cls, manufacture_factory_id: str, page: int, per_page: int) -> typing.List:
         productions = cls.conn_secondary.aggregate(
             [
                 {
@@ -212,6 +213,237 @@ class ProductionModel(BaseMongoDB):
                         "warranty_center_name": "$warranty_center.name",
                         "guarantee_number": 2,      #TODO: đếm
                         "customer_name": "$customer.fullname"
+                    }
+                }
+            ]
+        )
+        productions = list(productions)
+        return productions
+
+    @classmethod
+    def get_return_back_productions(cls, manufacture_factory_id: str, page: int, per_page: int) -> typing.List:
+        productions = cls.conn_secondary.aggregate(
+            [
+                {
+                    "$match": {
+                        "status": ProductionStatus.BACK_TO_FACTORY
+                    }
+                },
+                *ProductionAggregateFactory.construct_production(),
+                *ProductionAggregateFactory.join_production_lot(),
+                {
+                    "$match": {
+                        "production_lot.manufacture_factory_id": manufacture_factory_id
+                    }
+                },
+                {
+                    "$limit": page * per_page
+                },
+                {
+                    "$skip": per_page * (page - 1)
+                },
+                *ProductionAggregateFactory.join_product_line(),
+                *ProductionAggregateFactory.join_distribution_agent_warehouse(),
+                *ProductionAggregateFactory.join_distribution_agent(),
+                {
+                    "$project": {
+                        "production_id": "$production.production_id",
+                        "product_line_name": "$product_line.name",
+                        "product_lot_id": "$production_lot.product_lot_id",
+                        "production_time": "$production_lot.production_time",
+                        "distribution_agent_name": "$distribution_agent.name"
+                    }
+                }
+            ]
+        )
+        productions = list(productions)
+        return productions
+
+    @classmethod
+    def get_on_sale_productions(cls, distribution_agent_id: str):
+        productions = cls.conn_secondary.aggregate(
+            [
+                {
+                    "$match": {
+                        "status": ProductionStatus.GO_TO_DISTRIBUTION
+                    }
+                },
+                *ProductionAggregateFactory.construct_production(),
+                *ProductionAggregateFactory.join_distribution_agent_warehouse(),
+                {
+                    "$match": {
+                        "distribution_agent_warehouse.distribution_agent_id": distribution_agent_id
+                    }
+                },
+                *ProductionAggregateFactory.join_production_lot(),
+                *ProductionAggregateFactory.join_manufacture_factory(),
+                *ProductionAggregateFactory.join_product_line(),
+                {
+                    "$project": {
+                        "production_id": "$production.production_id",
+                        "manufacture_factory_name": "$manufacture_factory.name",
+                        "product_line_name": "$product_line.name",
+                        "ram": "$product_line.configuration.ram",
+                        "screen": "$product_line.configuration.screen",
+                        "cpu": "$product_line.configuration.cpu",
+                        "camera": "$product_line.configuration.camera",
+                        "pin": "$product_line.configuration.pin",
+                        "price": "$product_line.price",
+                        "production_time": "$production_lot.production_time",
+                        "import_time": "$production_lot.export_time"
+                    }
+                }
+            ]
+        )
+        productions = list(productions)
+        return productions
+
+    @classmethod
+    def get_sold_productions(cls, distribution_agent_id: str, page: int, per_page: int):
+        productions = cls.conn_secondary.aggregate(
+            [
+                {
+                    "$match": {
+                        "$or": [
+                            {"status": {"$eq": ProductionStatus.SOLD}},
+                            {"status": {"$eq": ProductionStatus.GUARANTEEING}},
+                            {"status": {"$eq": ProductionStatus.DISTRIBUTE_BACK_TO_CUSTOMER}},
+                            {"status": {"$eq": ProductionStatus.ERROR_NEED_BACK_TO_MANUFACTURE_FACTORY}},
+                        ]
+                    }
+                },
+                *ProductionAggregateFactory.construct_production(),
+                *ProductionAggregateFactory.join_distribution_agent_warehouse(),
+                {
+                    "$match": {
+                        "distribution_agent_warehouse.distribution_agent_id": distribution_agent_id
+                    }
+                },
+                {
+                    "$limit": per_page*page
+                },
+                {
+                    "$skip": per_page*(page - 1)
+                },
+                *ProductionAggregateFactory.join_production_lot(),
+                *ProductionAggregateFactory.join_manufacture_factory(),
+                *ProductionAggregateFactory.join_product_line(),
+                *ProductionAggregateFactory.join_guarantee_history(),
+                *ProductionAggregateFactory.join_warranty_center(),
+                *ProductionAggregateFactory.join_customer(),
+                {
+                    "$project": {
+                        "production_id": "$production.production_id",
+                        "product_line_name": "$product_line.name",
+                        "product_lot_id": "$production_lot.product_lot_id",
+                        "manufacture_factory_name": "$manufacture_factory.name",
+                        "production_time": "$production_lot.production_time",
+                        "status": "$production.status",
+                        "sold_at": "$distribution_agent_warehouse.sold_at",
+                        "warranty_center_name": "$warranty_center.name",
+                        "customer_name": "$customer.fullname",
+                        "customer_address": "$customer.address",
+                        "customer_phone_number": "$customer.phone_number"
+                    }
+                }
+            ]
+        )
+        productions = list(productions)
+        return productions
+
+    @classmethod
+    def get_guaranteeing_productions(cls, warranty_center_id: str, page: int, per_page: int):
+        productions = cls.conn_secondary.aggregate(
+            [
+                {
+                    "$match": {
+                        "status": ProductionStatus.GUARANTEEING
+                    }
+                },
+                *ProductionAggregateFactory.construct_production(),
+                *ProductionAggregateFactory.join_guarantee_history(),
+                {
+                    "$match": {
+                        "guarantee_history.warranty_center_id": warranty_center_id,
+                    }
+                },
+                {
+                    "$limit": per_page * page
+                },
+                {
+                    "$skip": per_page * (page - 1)
+                },
+                *ProductionAggregateFactory.join_production_lot(),
+                *ProductionAggregateFactory.join_product_line(),
+                *ProductionAggregateFactory.join_manufacture_factory(),
+                *ProductionAggregateFactory.join_distribution_agent_warehouse(),
+                *ProductionAggregateFactory.join_distribution_agent(),
+                *ProductionAggregateFactory.join_customer(),
+                {
+                    "$project": {
+                        "production_id": "$production.production_id",
+                        "product_line_name": "$product_line.name",
+                        "product_lot_id": "$production_lot.product_lot_id",
+                        "manufacture_factory_name": "$manufacture_factory.name",
+                        "production_time": "$production_lot.production_time",
+                        "receive_at": "$guarantee_history.receive_at",
+                        "distribution_agent_name": "$distribution_agent.name",
+                        "customer_name": "$customer.fullname",
+                        "customer_address": "$customer.address",
+                        "customer_phone_number": "$customer.phone_number"
+                    }
+                }
+            ]
+        )
+        productions = list(productions)
+        return productions
+
+    @classmethod
+    def get_guarantee_done_productions(cls, warranty_center_id: str, page: int, per_page: int):
+        productions = cls.conn_secondary.aggregate(
+            [
+                {
+                    "$match": {
+                        "$or": [
+                            {"status": {"$eq": ProductionStatus.DISTRIBUTE_BACK_TO_CUSTOMER}},
+                            {"status": {"$eq": ProductionStatus.ERROR_NEED_BACK_TO_MANUFACTURE_FACTORY}},
+                            {"status": {"$eq": ProductionStatus.GUARANTEE_EXPIRED}},
+                        ]
+                    }
+                },
+                *ProductionAggregateFactory.construct_production(),
+                *ProductionAggregateFactory.join_guarantee_history(),
+                {
+                    "$match": {
+                        "guarantee_history.warranty_center_id": warranty_center_id,
+                    }
+                },
+                {
+                    "$limit": per_page * page
+                },
+                {
+                    "$skip": per_page * (page - 1)
+                },
+                *ProductionAggregateFactory.join_production_lot(),
+                *ProductionAggregateFactory.join_product_line(),
+                *ProductionAggregateFactory.join_manufacture_factory(),
+                *ProductionAggregateFactory.join_distribution_agent_warehouse(),
+                *ProductionAggregateFactory.join_distribution_agent(),
+                *ProductionAggregateFactory.join_customer(),
+                {
+                    "$project": {
+                        "production_id": "$production.production_id",
+                        "product_line_name": "$product_line.name",
+                        "product_lot_id": "$production_lot.product_lot_id",
+                        "manufacture_factory_name": "$manufacture_factory.name",
+                        "production_time": "$production_lot.production_time",
+                        "receive_at": "$guarantee_history.receive_at",
+                        "done_guarantee_at": "$guarantee_history.done_guarantee_at",
+                        "status": "$production.status",
+                        "distribution_agent_name": "$distribution_agent.name",
+                        "customer_name": "$customer.fullname",
+                        "customer_address": "$customer.address",
+                        "customer_phone_number": "$customer.phone_number"
                     }
                 }
             ]

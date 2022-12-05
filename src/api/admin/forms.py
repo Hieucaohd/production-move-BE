@@ -29,7 +29,7 @@ class CreateWarrantyCenterForm(TypedDict):
 
 class CreateProductLineForm(TypedDict):
     name: str
-    price: str
+    price: float
     time_guarantee: str
     configuration: ProductLineConfiguration
 

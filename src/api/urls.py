@@ -18,6 +18,11 @@ class Endpoint:
     ALL_WARRANTY_CENTERS = "/api/warranty-centers"
     ALL_PRODUCTIONS = "/api/productions"
     ALL_PRODUCTION_LOTS = "/api/production-lots"
-    PRODUCTIONS_ERROR = "/api/manufacture-factories/productions-error"
+    GET_PRODUCTIONS_ERROR = "/api/manufacture-factories/productions-error"
+    GET_PRODUCTIONS_RETURN_BACK = "/api/manufacture-factories/productions-return-back"
+    GET_ON_SALE_PRODUCTIONS = "/api/distribution-agents/on-sale-productions"
+    GET_SOLD_PRODUCTIONS = "/api/distribution-agents/sold-productions"
+    GET_GUARANTEEING_PRODUCTIONS = "/api/warranty-centers/guaranteeing-productions"
+    GET_GUARANTEE_DONE_PRODUCTIONS = "/api/warranty-centers/guarantee-done-productions"
 
 

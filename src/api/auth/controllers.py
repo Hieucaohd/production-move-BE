@@ -3,6 +3,7 @@ from src.api.auth.forms import LoginForm
 from src.api.auth.models import AdminModel, ManufactureFactoryModel, DistributionAgentModel, WarrantyCenterModel, Admin, UserType
 from json import dumps
 from typing import TypedDict, Optional
+from datetime import datetime
 
 
 USER_AUTH_DATA_KEY = "user_auth_data"
@@ -42,10 +43,15 @@ class AuthController:
             name = warranty_center['name']
 
         response = jsonify({
-            "name": name
+            "name": name,
+            **user_auth_data
         })
 
-        response.set_cookie(USER_AUTH_DATA_KEY, value=dumps(user_auth_data))
+        response.set_cookie(
+            USER_AUTH_DATA_KEY,
+            value=dumps(user_auth_data),
+            max_age=60*60*24*365,
+        )
 
         return response
 

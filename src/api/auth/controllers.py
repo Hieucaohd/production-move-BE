@@ -3,7 +3,6 @@ from src.api.auth.forms import LoginForm
 from src.api.auth.models import AdminModel, ManufactureFactoryModel, DistributionAgentModel, WarrantyCenterModel, Admin, UserType
 from json import dumps
 from typing import TypedDict, Optional
-from dacite import from_dict
 
 
 USER_AUTH_DATA_KEY = "user_auth_data"
@@ -46,7 +45,7 @@ class AuthController:
             "name": name
         })
 
-        response.set_cookie(USER_AUTH_DATA_KEY, value=dumps(user_auth_data), httponly=True)
+        response.set_cookie(USER_AUTH_DATA_KEY, value=dumps(user_auth_data))
 
         return response
 

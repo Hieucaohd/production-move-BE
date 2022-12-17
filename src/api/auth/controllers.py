@@ -1,9 +1,8 @@
-from flask import request, jsonify
+from flask import request, jsonify, make_response
 from src.api.auth.forms import LoginForm
 from src.api.auth.models import AdminModel, ManufactureFactoryModel, DistributionAgentModel, WarrantyCenterModel, Admin, UserType
 from json import dumps
 from typing import TypedDict, Optional
-from datetime import datetime
 
 
 USER_AUTH_DATA_KEY = "user_auth_data"

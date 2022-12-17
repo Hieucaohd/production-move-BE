@@ -22,12 +22,19 @@ def create_app(config_object=ProdConfig):
 
     register_extensions(app)
     register_error_handlers(app)
+
+    @app.after_request
+    def middleware_for_response(response):
+        response.headers.add('Access-Control-Allow-Credentials', 'true')
+        return response
+
     register_blueprints(app)
 
     MongoDBInit.init_app(app)
 
     docs = FlaskApiSpec(app)
     register_blueprint_for_docs(docs)
+
     return app
 
 

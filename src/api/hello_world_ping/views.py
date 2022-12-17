@@ -10,7 +10,7 @@ blueprint = Blueprint('hello_world_ping', __name__)
 @blueprint.route(Endpoint.HELLO_WORLD, methods=[HttpMethod.GET])
 def hello_world():
     response = make_response("Hello world")
-    response.set_cookie("my_fisrt_cookie", "valuehhhh")
+    response.set_cookie("my_fisrt_cookie", "valuehhhh", samesite=None)
     return response
 
 

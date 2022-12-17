@@ -29,6 +29,7 @@ from datetime import datetime
 from json import loads
 import typing
 from dacite import from_dict
+from src.common.utils.common_utils import get_user_auth_data
 
 
 class AdminController:
@@ -112,7 +113,8 @@ class AdminController:
     def create_production_lot(cls):
         create_production_lot_form = from_dict(CreateProductionLotForm, request.json)
         manufacture_factory: UserAuthData = loads(
-            request.cookies.get(USER_AUTH_DATA_KEY))
+            get_user_auth_data()
+        )
 
         if manufacture_factory["user_type"] != UserType.MANUFACTURE_FACTORY:
             return jsonify({"error": "User isn't manufacture factory"})
@@ -287,7 +289,8 @@ class AdminController:
     @classmethod
     def get_all_production_lots(cls):
         manufacture_factory: UserAuthData = loads(
-            request.cookies.get(USER_AUTH_DATA_KEY))
+            get_user_auth_data()
+        )
 
         if manufacture_factory["user_type"] != UserType.MANUFACTURE_FACTORY:
             return jsonify({"error": "User isn't manufacture factory"})
@@ -299,7 +302,8 @@ class AdminController:
     @classmethod
     def get_error_productions(cls, page: int, per_page: int):
         manufacture_factory: UserAuthData = loads(
-            request.cookies.get(USER_AUTH_DATA_KEY))
+            get_user_auth_data()
+        )
 
         if manufacture_factory["user_type"] != UserType.MANUFACTURE_FACTORY:
             return jsonify({"error": "User isn't manufacture factory"})
@@ -311,7 +315,8 @@ class AdminController:
     @classmethod
     def get_return_back_productions(cls, page: int, per_page: int):
         manufacture_factory: UserAuthData = loads(
-            request.cookies.get(USER_AUTH_DATA_KEY))
+            get_user_auth_data()
+        )
 
         if manufacture_factory["user_type"] != UserType.MANUFACTURE_FACTORY:
             return jsonify({"error": "User isn't manufacture factory"})
@@ -323,7 +328,7 @@ class AdminController:
     @classmethod
     def get_on_sale_productions(cls):
         distribution_agent: UserAuthData = loads(
-            request.cookies.get(USER_AUTH_DATA_KEY)
+            get_user_auth_data()
         )
 
         if distribution_agent["user_type"] != UserType.DISTRIBUTION_AGENT:
@@ -336,7 +341,7 @@ class AdminController:
     @classmethod
     def get_sold_productions(cls, page: int, per_page: int):
         distribution_agent: UserAuthData = loads(
-            request.cookies.get(USER_AUTH_DATA_KEY)
+            get_user_auth_data()
         )
 
         if distribution_agent["user_type"] != UserType.DISTRIBUTION_AGENT:
@@ -349,7 +354,7 @@ class AdminController:
     @classmethod
     def get_guaranteeing_productions(cls, page: int, per_page: int):
         warranty_center: UserAuthData = loads(
-            request.cookies.get(USER_AUTH_DATA_KEY)
+            get_user_auth_data()
         )
 
         if warranty_center["user_type"] != UserType.WARRANTY_CENTER:
@@ -362,7 +367,7 @@ class AdminController:
     @classmethod
     def get_guarantee_done_productions(cls, page: int, per_page: int):
         warranty_center: UserAuthData = loads(
-            request.cookies.get(USER_AUTH_DATA_KEY)
+            get_user_auth_data()
         )
 
         if warranty_center["user_type"] != UserType.WARRANTY_CENTER:

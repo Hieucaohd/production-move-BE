@@ -15,7 +15,14 @@ def hello_world():
 @blueprint.route('/set-cookie', methods=['GET'])
 def set_cookie():
     response = Response('You have set a cookie')
-    response.set_cookie('id_token', 'somereallycoolvalue')
+    response.set_cookie(
+        key='id_token',
+        value='somereallycoolvalue',
+        secure=False,
+        samesite=None,
+        httponly=False,
+        max_age=60*60*24*365
+    )
 
     return response
 
@@ -41,6 +48,15 @@ def remove_cookie():
         res = 'id_token was not a cookie'
 
     return res
+
+
+@blueprint.route('/get-header-key', methods=['GET'])
+def get_header_key():
+    key_value = request.headers.get("user_auth_data")
+    from json import loads
+    data = loads(key_value)
+    print(data)
+    return "oke"
 
 
 def register_docs(docs):

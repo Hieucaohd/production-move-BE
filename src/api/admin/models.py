@@ -530,7 +530,7 @@ class GuaranteeHistoryModel(BaseMongoDB):
     @classmethod
     def guarantee_done(cls, production_id: str, day_sent: str):
         cls.conn_primary.update_one({"production_id": production_id}, {
-            "done_guarantee_at": day_sent
+            "$set": {"done_guarantee_at": day_sent}
         })
 
     @classmethod

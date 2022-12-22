@@ -46,11 +46,12 @@ class AuthController:
             **user_auth_data
         })
 
-        response.set_cookie(
-            USER_AUTH_DATA_KEY,
-            value=dumps(user_auth_data),
-            max_age=60*60*24*365,
-        )
+        # TODO: because set cookie in FE is impossible now
+        # response.set_cookie(
+        #     USER_AUTH_DATA_KEY,
+        #     value=dumps(user_auth_data),
+        #     max_age=60*60*24*365,
+        # )
 
         return response
 

@@ -491,6 +491,10 @@ class DistributionAgentWarehouseModel(BaseMongoDB):
             "sold_at": sold_at
         }})
 
+    @classmethod
+    def send_back_factory(cls, production_id: str):
+        cls.conn_primary.delete_one({"production_id": production_id})
+
 
 class Customer(TypedDict):
     fullname: str

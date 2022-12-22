@@ -76,6 +76,12 @@ class WarrantySendBackFactoryForm:
     day_sent: str
 
 
+@dataclass
+class DistributionAgentSendBackFactoryForm:
+    production_id: str
+    day_sent: str
+
+
 if __name__ == '__main__':
     create = CreateProductionLotForm(product_line_id="1", production_number=2, production_time="3")
     print(create.__dict__)

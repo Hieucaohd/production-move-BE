@@ -58,6 +58,11 @@ def warranty_send_back_factory():
     return AdminController.warranty_send_back_factory()
 
 
+@blueprint.route(Endpoint.DISTRIBUTION_AGENT_SEND_BACK_FACTORY, methods=[HttpMethod.POST])
+def distribution_agent_send_back_factory():
+    return AdminController.distribution_agent_send_back_factory()
+
+
 @blueprint.route(Endpoint.ALL_PRODUCT_LINES, methods=[HttpMethod.GET])
 def get_all_product_lines():
     return AdminController.get_product_lines()

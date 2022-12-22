@@ -12,6 +12,7 @@ class Endpoint:
     GUARANTEE_PRODUCTION = "/api/distribution-agents/guarantee"
     GUARANTEE_DONE = "/api/warranty-center/guarantee-done"
     WARRANTY_SEND_BACK_FACTORY = "/api/warranty-center/send-back-to-factory"
+    DISTRIBUTION_AGENT_SEND_BACK_FACTORY = "/api/distribution-agents/send-back-factory"
 
     ALL_PRODUCT_LINES = "/api/product-lines"
     ALL_MANUFACTURE_FACTORIES = "/api/manufacture-factories"

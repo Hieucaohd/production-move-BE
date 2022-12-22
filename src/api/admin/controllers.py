@@ -13,7 +13,8 @@ from src.api.admin.forms import \
     CreateWarrantyCenterForm, \
     CreateProductLineForm, \
     CreateProductionLotForm, \
-    ExportProductionLotForm, SoldProductionForm, GuaranteeProductionForm, GuaranteeDoneForm, WarrantySendBackFactoryForm
+    ExportProductionLotForm, SoldProductionForm, GuaranteeProductionForm, GuaranteeDoneForm, \
+    WarrantySendBackFactoryForm, DistributionAgentSendBackFactoryForm
 from src.api.admin.models import \
     ProductLine, \
     ProductLineModel, \
@@ -250,6 +251,24 @@ class AdminController:
             GuaranteeHistoryModel.send_error_production_back_factory(
                 production_id=warranty_send_back_factory_form.production_id,
                 go_back_factory_at=warranty_send_back_factory_form.day_sent
+            )
+
+            return jsonify({"success": True})
+        except Exception as er:
+            return jsonify({"error": str(er)})
+
+    @classmethod
+    def distribution_agent_send_back_factory(cls):
+        distribution_agent_send_back_factory_form = from_dict(DistributionAgentSendBackFactoryForm, request.json)
+
+        try:
+            ProductionModel.change_production_status(
+                production_id=distribution_agent_send_back_factory_form.production_id,
+                status=ProductionStatus.BACK_TO_FACTORY
+            )
+
+            DistributionAgentWarehouseModel.send_back_factory(
+                production_id=distribution_agent_send_back_factory_form.production_id
             )
 
             return jsonify({"success": True})

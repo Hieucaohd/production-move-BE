@@ -165,10 +165,14 @@ class ProductionModel(BaseMongoDB):
                         "sold_at": "$distribution_agent_warehouse.sold_at",
                         "distribution_agent_name": "$distribution_agent.name",
                         "warranty_center_name": "$warranty_center.name",
-                        "guarantee_number": 2,  #TODO: đếm số lần bảo hành
                         "customer_name": "$customer.fullname"
                     }
-                }
+                },
+                {
+                    "$addFields": {
+                        "guarantee_number": 1,  # TODO: đếm số lần bảo hành
+                    }
+                },
             ]
         )
         productions = list(productions)
@@ -211,10 +215,14 @@ class ProductionModel(BaseMongoDB):
                         "sold_at": "$distribution_agent_warehouse.sold_at",
                         "distribution_agent_name": "$distribution_agent.name",
                         "warranty_center_name": "$warranty_center.name",
-                        "guarantee_number": 2,      #TODO: đếm
                         "customer_name": "$customer.fullname"
                     }
-                }
+                },
+                {
+                    "$addFields": {
+                        "guarantee_number": 1,  # TODO: đếm số lần bảo hành
+                    }
+                },
             ]
         )
         productions = list(productions)
@@ -251,7 +259,7 @@ class ProductionModel(BaseMongoDB):
                         "product_line_name": "$product_line.name",
                         "product_lot_id": "$production_lot.product_lot_id",
                         "production_time": "$production_lot.production_time",
-                        "distribution_agent_name": "$distribution_agent.name"
+                        "distribution_agent_name": "$distribution_agent.name",
                     }
                 }
             ]
@@ -491,10 +499,6 @@ class DistributionAgentWarehouseModel(BaseMongoDB):
             "sold_at": sold_at
         }})
 
-    @classmethod
-    def send_back_factory(cls, production_id: str):
-        cls.conn_primary.delete_one({"production_id": production_id})
-
 
 class Customer(TypedDict):
     fullname: str
@@ -555,7 +559,10 @@ if __name__ == '__main__':
         db_name=os.environ.get("DB_NAME", "prodDB")
     )
     MongoDBInit.init_client(mongo_config)
-    # productions = ProductionModel.get_all_productions(1, 10)
-    # pprint(productions, indent=2)
-    production_lots = ProductionLotModel.get_production_lots("d3e0947e719111ed94bbf42679426f61")
-    pprint(production_lots, indent=2)
+    # productions = ProductionModel.get_return_back_productions(
+    #     manufacture_factory_id="d3e0947e719111ed94bbf42679426f61",
+    #     page=1,
+    #     per_page=10
+    # )
+    productions = ProductionModel.get_all_productions(1, 10)
+    pprint(productions, indent=2)

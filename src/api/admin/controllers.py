@@ -267,10 +267,6 @@ class AdminController:
                 status=ProductionStatus.BACK_TO_FACTORY
             )
 
-            DistributionAgentWarehouseModel.send_back_factory(
-                production_id=distribution_agent_send_back_factory_form.production_id
-            )
-
             return jsonify({"success": True})
         except Exception as er:
             return jsonify({"error": str(er)})
